@@ -1,0 +1,16 @@
+Homer app description
+An app that brings together all these functionalities in one place:
+-A simple projects and task manager (very simple user friendly just to get things done fast without confusions nor a lot of planning and structuring)
+-A simple budget manager that helps the user manage his monthly budget through solitting it into expenses (classified and justified expenses), savings and investments
+-A chat page that enables u to chat with friends easily
+-A ressources page that u can use to at the same time store and share valuable ressources found on the web. Each ressource will have a description set by the user that stores it, a category one of the following (Wealth, Knowledge, Recreation)
+-A dashboard showing, Recent unseen messages, Unseen ressources, Spending evolution last 30 days, Task due today, Motivational adverb widget. The dashboard layout should be customisable, by moving or deactivating widgets from the dashboard. (this will be stored in the database, in the form of a list or something that whenever the user acceses their dashboard the dashboard renders with the same configuration that the user has saved)
+
+-Profile will be just a pop up in which u can change password, username, delete account and other stuff.
+
+For now these are the pages that should be in the Homer web app.
+
+Now to make sure UI is good on these pages i should first look for a UI library and get all the components that will be used in the app before building it so that we dont get lost in the integration hell.
+
+Before that i should just make a functioning skeleton for the app using Next js , Typescript, Convex, Clerk, Tailwind, TailArk for the homepage.
+Good luck

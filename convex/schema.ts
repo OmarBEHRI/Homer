@@ -1,0 +1,134 @@
+    import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+const spendCategoryEnum = v.union(
+  v.literal("Rent"),
+  v.literal("Internet"),
+  v.literal("Mobile Internet"),
+  v.literal("Groceries"),
+  v.literal("Eating Out"),
+  v.literal("Shopping"),
+  v.literal("Car Mortgage"),
+  v.literal("House Mortgage"),
+  v.literal("Other Mortgages or Debts"),
+  v.literal("Transportation"),
+  v.literal("Subscriptions"),
+  v.literal("Utilities"),
+  v.literal("Healthcare"),
+  v.literal("Savings"),
+  v.literal("Investments"),
+  v.literal("Entertainment"),
+  v.literal("Insurance"),
+  v.literal("Education"),
+  v.literal("Miscellaneous"),
+  v.literal("Custom"),
+);
+
+export default defineSchema({
+  users: defineTable({
+    externalId: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerified: v.optional(v.boolean()),
+    phoneNumber: v.optional(v.string()),
+    phoneNumberVerified: v.optional(v.boolean()),
+    fullName: v.optional(v.string()),
+    firstName: v.optional(v.string()),
+    lastName: v.optional(v.string()),
+    username: v.optional(v.string()),
+    avatarUrl: v.optional(v.string()),
+    pricingPlan: v.union(
+      v.literal("free"),
+      v.literal("pro"),
+      v.literal("enterprise"),
+    ),
+    roles: v.optional(v.array(v.string())),
+    createdAt: v.number(),
+    lastActiveAt: v.optional(v.number()),
+    updatedAt: v.optional(v.string()),
+    lastSyncedAt: v.optional(v.number()),
+    dashboardConfig: v.optional(
+      v.array(
+        v.object({
+          widgetId: v.string(),
+          enabled: v.boolean(),
+          order: v.number(),
+          size: v.optional(
+            v.union(
+              v.literal("sm"),
+              v.literal("md"),
+              v.literal("lg"),
+              v.literal("xl"),
+            ),
+          ),
+        }),
+      ),
+    ),
+    taskPreferences: v.optional(
+      v.object({
+        defaultView: v.optional(v.union(v.literal("list"), v.literal("board"))),
+        autoArchiveCompleted: v.optional(v.boolean()),
+        notifyDailySummary: v.optional(v.boolean()),
+      }),
+    ),
+    budgetPreferences: v.optional(
+      v.object({
+        defaultCurrency: v.optional(v.string()),
+        monthlyLimit: v.optional(v.number()),
+        rolloverEnabled: v.optional(v.boolean()),
+      }),
+    ),
+    resourcePreferences: v.optional(
+      v.object({
+        defaultCategory: v.optional(
+          v.union(
+            v.literal("Wealth"),
+            v.literal("Knowledge"),
+            v.literal("Recreation"),
+          ),
+        ),
+        notifyOnNew: v.optional(v.boolean()),
+        sortOrder: v.optional(v.union(v.literal("recent"), v.literal("popular"))),
+      }),
+    ),
+    mrr: v.optional(v.number()),
+  })
+    .index("by_externalId", ["externalId"])
+    .index("by_email", ["email"])
+    .index("by_username", ["username"])
+    .index("by_phoneNumber", ["phoneNumber"]),
+  spend: defineTable({
+    userId: v.id("users"),
+    amount: v.number(),
+    category: spendCategoryEnum,
+    customCategoryLabel: v.optional(v.string()),
+    description: v.optional(v.string()),
+    date: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"]),
+  budgetPlans: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    currency: v.string(),
+    total: v.number(),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_createdAt", ["userId", "createdAt"]),
+  budgetAllocations: defineTable({
+    userId: v.id("users"),
+    planId: v.optional(v.id("budgetPlans")),
+    category: spendCategoryEnum,
+    customCategoryLabel: v.optional(v.string()),
+    amount: v.number(),
+    description: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_plan", ["planId"]),
+});
+

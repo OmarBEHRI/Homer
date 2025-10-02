@@ -1,0 +1,12 @@
+
+
+TASK 2 ---------------------------------
+After that attack the following things:
+
+
+TASK 3 --------------------------------
+
+In the Management tab make sure to remove the Management playboook bloock because we dont need it.
+There should be only one block in the Management page and its Distribution tree, and we should check if the user is editing or if the database has no budget allocation sthen it shows a button in the middle with a text "Set Budget Allocations" or something which pulls up a form that shows unallocated budget and helps the user add a new budget allocation.
+Then when the user saves his changes, the Distribution Tree shows allocatiosn and unallocated budget, in a tree form.
+Add necessary functions (queries, mutations and functions) in a budget.ts file in convex folder. check @Convex for docs
