@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 import { addDays, endOfMonth, format, isAfter, parse, startOfMonth } from "date-fns";
 
@@ -31,12 +33,17 @@ interface Allocation {
   description?: string;
 }
 
+interface CategorySpending {
+  category: string;
+  amount: number;
+}
+
 const periodOptions = [
   { key: "30", label: "30 Days" },
   { key: "90", label: "3 Months" },
   { key: "180", label: "6 Months" },
   { key: "365", label: "1 Year" },
-  { key: "all", label: "All Time" },
+  { key: "all", label: "All Time" }
 ];
 
 const predefinedCategories = [
@@ -75,35 +82,64 @@ const currencyFormatter = (currency: string) =>
     minimumFractionDigits: 2,
   });
 
-
-
-
 export default function BudgetPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("analytics");
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [salary, setSalary] = useState<Salary>({ monthlySalary: 3200, payDay: 1 });
   const [categories, setCategories] = useState<string[]>([...predefinedCategories]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newExpense, setNewExpense] = useState({ amount: "", category: "", description: "", newCategory: "" });
   const [selectedPeriod, setSelectedPeriod] = useState<string>("30");
-  const [imageHref, setImageHref] = useState<string>("");
-  const [budgetTotal, setBudgetTotal] = useState<number>(4500);
   const [budgetCurrency, setBudgetCurrency] = useState<string>("USD");
-  const [budgetName, setBudgetName] = useState<string>("Household Control Center");
-  const [allocations, setAllocations] = useState<Allocation[]>([]);
-  const [allocationForm, setAllocationForm] = useState({ id: "", category: "", amount: "", description: "", newCategory: "" });
 
-  useEffect(() => {
-    fetch("https://essykings.github.io/JavaScript/map.png")
-      .then((response) => response.blob())
-      .then((blob) => {
-        const objURL = URL.createObjectURL(blob);
-        setImageHref(objURL);
-      })
-      .catch(() => {
-        // Background map is optional; swallow network errors silently.
-      });
-  }, []);
+  // Convex queries and mutations (will return null/undefined if not authenticated)
+  const convexAllocations = useQuery(api.budgetAllocations.getAllocationsForCurrentUser);
+  const currentUser = useQuery(api.users.getCurrentUser);
+  const convexExpenses = useQuery(api.expenses.getExpensesForCurrentUser);
+  const categorySpendingData = useQuery(api.expenses.getTopCategoriesForCurrentMonth);
+  const createAllocation = useMutation(api.budgetAllocations.createAllocation);
+  const updateAllocation = useMutation(api.budgetAllocations.updateAllocation);
+  const deleteAllocation = useMutation(api.budgetAllocations.deleteAllocation);
+  const updateMrr = useMutation(api.users.updateMrr);
+  const updateSalaryInfo = useMutation(api.users.updateSalaryInfo);
+  const createExpense = useMutation(api.expenses.createExpense);
+
+  // Transform Convex data to component format
+  const allocations: Allocation[] = useMemo(() => {
+    if (!convexAllocations) return [];
+    return convexAllocations.map((allocation) => ({
+      id: allocation._id,
+      category: allocation.customCategoryLabel || allocation.category,
+      amount: allocation.amount,
+      description: allocation.description,
+    }));
+  }, [convexAllocations]);
+
+  // Transform expenses from Convex
+  const expenses: Expense[] = useMemo(() => {
+    if (!convexExpenses) return [];
+    return convexExpenses.map((expense) => ({
+      id: expense._id,
+      date: expense.date,
+      amount: expense.amount,
+      category: expense.customCategoryLabel || expense.category,
+      description: expense.description,
+    }));
+  }, [convexExpenses]);
+
+  // Transform category spending data from Convex
+  const categorySpending: CategorySpending[] = useMemo(() => {
+    if (!categorySpendingData) return [];
+    return categorySpendingData;
+  }, [categorySpendingData]);
+
+  // Get salary info from user data
+  const salary: Salary = useMemo(() => ({
+    monthlySalary: currentUser?.mrr || 3200,
+    payDay: currentUser?.payDay || 1,
+  }), [currentUser?.mrr, currentUser?.payDay]);
+
+  // Get monthly salary from user data
+  const monthlySalary = currentUser?.mrr;
 
   const now = new Date();
   const nowTimestamp = now.getTime();
@@ -200,21 +236,9 @@ export default function BudgetPage() {
     [allocations],
   );
 
-  const allocationStatus = useMemo(() => {
-    const remaining = budgetTotal - totalAllocated;
-    const fill = budgetTotal === 0 ? 0 : Math.min(100, Math.max(0, (totalAllocated / budgetTotal) * 100));
-
-    return {
-      remaining,
-      percentage: fill,
-    };
-  }, [budgetTotal, totalAllocated]);
-
-  const recentExpenses = useMemo(() => [...expenses].sort((a, b) => (a.date > b.date ? -1 : 1)).slice(0, 5), [expenses]);
-
   const resetExpenseForm = () => setNewExpense({ amount: "", category: "", description: "", newCategory: "" });
 
-  const addExpense = () => {
+  const addExpense = async () => {
     if (!newExpense.amount || (!newExpense.category && !newExpense.newCategory.trim())) {
       return;
     }
@@ -225,162 +249,140 @@ export default function BudgetPage() {
     }
 
     const categoryLabel = newExpense.newCategory.trim() || newExpense.category;
-    const expense: Expense = {
-      id: makeLocalId("expense"),
-      date: new Date(nowTimestamp).toISOString(),
-      amount: parsedAmount,
-      category: categoryLabel,
-      description: newExpense.description.trim() || undefined,
-    };
-
-    setExpenses((previous) => [...previous, expense]);
-
-    if (newExpense.newCategory.trim() && !categories.includes(categoryLabel)) {
-      setCategories((previous) => [...previous, categoryLabel]);
+    
+    // Determine the category enum value
+    let categoryEnum: any = categoryLabel;
+    if (newExpense.newCategory.trim()) {
+      categoryEnum = "Custom";
     }
 
-    setNewExpense({ amount: "", category: "", description: "", newCategory: "" });
-    setIsModalOpen(false);
+    try {
+      await createExpense({
+        amount: parsedAmount,
+        category: categoryEnum,
+        customCategoryLabel: newExpense.newCategory.trim() || undefined,
+        description: newExpense.description.trim() || undefined,
+        date: new Date(nowTimestamp).toISOString().split('T')[0], // YYYY-MM-DD format
+      });
+
+      if (newExpense.newCategory.trim() && !categories.includes(categoryLabel)) {
+        setCategories((previous) => [...previous, categoryLabel]);
+      }
+
+      setNewExpense({ amount: "", category: "", description: "", newCategory: "" });
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Error creating expense:", error);
+      alert("Failed to create expense. Please try again.");
+    }
   };
 
-  const updateSalary = (field: "monthlySalary" | "payDay", value: number) => {
+  const updateSalary = async (field: "monthlySalary" | "payDay", value: number) => {
     if (field === "payDay" && (Number.isNaN(value) || value < 1 || value > 31)) {
       return;
     }
 
-    setSalary((previous) => ({ ...previous, [field]: Number.isNaN(value) ? previous[field] : value }));
-  };
-
-  const handleAllocationSubmit = () => {
-    if (!allocationForm.amount || (!allocationForm.category && !allocationForm.newCategory.trim())) {
+    if (Number.isNaN(value)) {
       return;
     }
 
-    const parsedAmount = parseFloat(allocationForm.amount);
-    if (Number.isNaN(parsedAmount) || parsedAmount <= 0) {
-      return;
-    }
-
-    const label = allocationForm.newCategory.trim() || allocationForm.category;
-    const payload: Allocation = {
-      id: allocationForm.id || makeLocalId("allocation"),
-      category: label,
-      amount: parsedAmount,
-      description: allocationForm.description.trim() || undefined,
-    };
-
-    setAllocations((previous) => {
-      if (allocationForm.id) {
-        return previous.map((entry) => (entry.id === allocationForm.id ? payload : entry));
+    try {
+      if (field === "monthlySalary") {
+        await updateSalaryInfo({ mrr: value });
+      } else if (field === "payDay") {
+        await updateSalaryInfo({ payDay: value });
       }
-      return [...previous, payload];
-    });
+    } catch (error) {
+      console.error("Error updating salary info:", error);
+      alert("Failed to update salary info. Please try again.");
+    }
+  };
 
-    if (allocationForm.newCategory.trim() && !categories.includes(label)) {
-      setCategories((prev) => [...prev, label]);
+  const handleAllocationSubmit = async (allocation: {
+    category: string;
+    amount: number;
+    description?: string;
+    customCategoryLabel?: string;
+  }) => {
+    try {
+      await createAllocation({
+        category: allocation.category as any, // Type assertion for the enum
+        amount: allocation.amount,
+        description: allocation.description,
+        customCategoryLabel: allocation.customCategoryLabel,
+      });
+    } catch (error) {
+      console.error("Error creating allocation:", error);
+      alert("Failed to create allocation. Please try again.");
+    }
+  };
+
+  const handleUpdateMonthlySalary = async (amount: number) => {
+    try {
+      await updateMrr({ mrr: amount });
+    } catch (error) {
+      console.error("Error updating monthly salary:", error);
+      alert("Failed to update monthly salary. Please try again.");
+    }
+  };
+
+  // Define the CSS styles as a string
+  const glassStyles = `
+    @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    setAllocationForm({ id: "", category: "", amount: "", description: "", newCategory: "" });
-  };
-
-  const handleAllocationEdit = (id: string) => {
-    const match = allocations.find((entry) => entry.id === id);
-    if (!match) {
-      return;
+    .glass-card:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     }
 
-    setAllocationForm({
-      id: match.id,
-      category: match.category,
-      amount: String(match.amount),
-      description: match.description ?? "",
-      newCategory: "",
-    });
-  };
+    .glass-text {
+      font-family: 'Inter', sans-serif;
+      color: rgba(17, 24, 39, 0.95);
+      letter-spacing: 0.01em;
+    }
 
-  const handleAllocationDelete = (id: string) => {
-    setAllocations((previous) => previous.filter((entry) => entry.id !== id));
-  };
+    .tree-branch {
+      position: relative;
+      padding-left: 1.25rem;
+    }
+
+    .tree-branch::before {
+      content: '';
+      position: absolute;
+      top: 0.8rem;
+      left: 0.25rem;
+      width: 1rem;
+      height: 1px;
+      background: rgba(156, 163, 175, 0.5);
+    }
+
+    .tree-branch::after {
+      content: '';
+      position: absolute;
+      top: 0.8rem;
+      left: 0.25rem;
+      width: 1px;
+      height: calc(100% - 0.8rem);
+      background: linear-gradient(180deg, rgba(156, 163, 175, 0.4) 0%, rgba(156, 163, 175, 0.1) 100%);
+    }
+  `;
 
   return (
-    <div
-      className="relative min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 px-4 pb-[120px] pt-6"
-      style={{
-        backgroundImage:
-          "url(https://images.unsplash.com/photo-1683657535824-5b570c7a1749?q=80&w=1200&auto=format&fit=cover&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D)",
-        backgroundSize: "cover",
-        animation: "floatBG 18s ease-in-out infinite",
-      }}
-    >
-      <style>{`
-        @keyframes floatBG {
-          0%, 100% { background-position: center center; }
-          25% { background-position: 28% 68%; }
-          50% { background-position: 70% 32%; }
-          75% { background-position: 40% 60%; }
-        }
+    <div className="relative min-h-screen px-4 pb-[120px] pt-6">
+      <style>{glassStyles}</style>
 
-        @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap");
-
-        .glass-card {
-          background: linear-gradient(135deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.14) 45%, rgba(255, 255, 255, 0.06) 100%);
-          border: 1px solid rgba(255, 255, 255, 0.38);
-          border-radius: 22px;
-          box-shadow: 0 18px 38px rgba(15, 23, 42, 0.28);
-          backdrop-filter: blur(16px);
-          transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-
-        .glass-card:hover {
-          transform: translateY(-4px);
-          border-color: rgba(180, 198, 255, 0.65);
-        }
-
-        .glass-text {
-          font-family: 'Orbitron', monospace;
-          color: rgba(255, 255, 255, 0.94);
-          text-shadow: 0 10px 18px rgba(15, 15, 45, 0.38);
-          letter-spacing: 0.02em;
-        }
-
-        .tree-branch {
-          position: relative;
-          padding-left: 1.25rem;
-        }
-
-        .tree-branch::before {
-          content: '';
-          position: absolute;
-          top: 0.8rem;
-          left: 0.25rem;
-          width: 1rem;
-          height: 1px;
-          background: rgba(255, 255, 255, 0.35);
-        }
-
-        .tree-branch::after {
-          content: '';
-          position: absolute;
-          top: 0.8rem;
-          left: 0.25rem;
-          width: 1px;
-          height: calc(100% - 0.8rem);
-          background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.05) 100%);
-        }
-      `}</style>
-
-      <svg style={{ position: "absolute", width: 0, height: 0 }}>
-        <filter id="glass" x="-50%" y="-50%" width="200%" height="200%" primitiveUnits="objectBoundingBox">
-          {imageHref && <feImage href={imageHref} x="-50%" y="-50%" width="200%" height="200%" result="map" />}
-          <feGaussianBlur in="SourceGraphic" stdDeviation="0.02" result="blur" />
-          <feDisplacementMap in="blur" in2={imageHref ? "map" : "SourceGraphic"} scale="0.85" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </svg>
-
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 bg-transparent">
         <BudgetTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="h-[calc(100vh-190px)] overflow-hidden">
+        <div className="h-[calc(100vh-190px)] overflow-hidden bg-transparent">
           {activeTab === "analytics" && (
             <AnalyticsTab
               chartData={chartData}
@@ -400,27 +402,31 @@ export default function BudgetPage() {
               allCategories={allCategories}
               addExpense={addExpense}
               resetExpenseForm={resetExpenseForm}
-              recentExpenses={recentExpenses}
+              isEditModalOpen={isEditModalOpen}
+              setIsEditModalOpen={setIsEditModalOpen}
+              categorySpending={categorySpending}
             />
           )}
           {activeTab === "management" && (
             <ManagementTab
-              budgetTotal={budgetTotal}
-              setBudgetTotal={setBudgetTotal}
-              budgetCurrency={budgetCurrency}
-              setBudgetCurrency={setBudgetCurrency}
-              budgetName={budgetName}
-              setBudgetName={setBudgetName}
-              totalAllocated={totalAllocated}
-              allocationStatus={allocationStatus}
               allocations={allocations}
-              allCategories={allCategories}
-              allocationForm={allocationForm}
-              setAllocationForm={setAllocationForm}
+              budgetCurrency={budgetCurrency}
               handleAllocationSubmit={handleAllocationSubmit}
-              handleAllocationEdit={handleAllocationEdit}
-              handleAllocationDelete={handleAllocationDelete}
+              handleUpdateAllocation={async (params) => {
+                await updateAllocation({
+                  allocationId: params.allocationId as any,
+                  amount: params.amount,
+                  description: params.description,
+                });
+              }}
+              handleDeleteAllocation={async (params) => {
+                await deleteAllocation({
+                  allocationId: params.allocationId as any,
+                });
+              }}
               currencyFormatter={currencyFormatter}
+              monthlySalary={monthlySalary}
+              onUpdateMonthlySalary={handleUpdateMonthlySalary}
             />
           )}
           {activeTab === "investments" && <InvestmentsTab />}

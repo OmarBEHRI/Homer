@@ -17,7 +17,7 @@ export const HeroHeader = () => {
     const [menuState, setMenuState] = React.useState(false)
     const [isScrolled, setIsScrolled] = React.useState(false)
     const { isAuthenticated } = useConvexAuth()
-    const currentUser = useQuery(api.users.getCurrentUser)
+    const currentUser = useQuery(api.users.getCurrentUser, isAuthenticated ? {} : "skip")
 
 
     React.useEffect(() => {
@@ -81,7 +81,7 @@ export const HeroHeader = () => {
                                 ) : (
                                     <div className="flex items-center gap-3">
                                         <span className="text-sm text-muted-foreground">
-                                            {currentUser?.displayName || currentUser?.email || 'User'}
+                                            {currentUser?.fullName || currentUser?.email || 'User'}
                                         </span>
                                         <UserButton afterSignOutUrl="/" />
                                         <SignOutButton>

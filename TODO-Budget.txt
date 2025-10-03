@@ -1,0 +1,76 @@
+The budget page should enable users to manage their budget, the page should have three tabs that we can toggle between using a mini nav bar at the top.
+
+The first tab should be Analytics and its the default tab, it shows to the user a chart with his spent on the last 30 days by default and the user can chose to also see the spend curve of the last 3 months, 6 months Year and all time.
+The user should also see His current monthly income, Days and hours until pay, and money left this month based on months spendings that he the user sets daily, in this tab the user should also be able to set the spendings of that day and categorise them.
+
+✅ COMPLETED: The second tab is management tab - NOW FEATURES:
+
+VERSION 1:
+- Single full-width Distribution Tree block (removed Budget Overview, Management Playbook, and Add/Edit Allocation sections)
+- Interactive Treemap visualization using Recharts showing budget allocations
+- Circular "+" button (black background, white icon) in top-right corner
+- Modal dialog for adding new allocations with:
+  * Category selection
+  * Custom category label option
+  * Amount input
+  * Description field
+- Full Convex integration with authenticated queries and mutations
+- Color-coded treemap blocks with hover tooltips
+- Empty state with helpful messaging
+
+VERSION 2 (LATEST):
+- Monthly salary (mrr) integration from Convex DB
+- Circular "$" button (gradient background) for setting/updating monthly salary
+- Automatic "Unallocated" block in treemap (gray color) showing remaining salary
+- Real-time calculation: Total Salary - Allocated = Unallocated
+- Header displays: Monthly Salary, Allocated Amount, Unallocated Amount
+- Empty state prompts user to set salary first before adding allocations
+- Allocation button disabled until salary is set
+- Salary modal dialog for easy updates
+
+The Third tab will be investment tab, in which the user will be able to manage his investments and diversify them, in stock, crypto, gold and etc.
+This will be in a “Coming Soon feature“ for now just show in this tab a text in the miiddle saying this feature will be coming soon.
+
+✅ COMPLETED: Convex DB Collections Implemented:
+
+1. spend collection:
+   - amount: number
+   - category: enum (20+ categories)
+   - customCategoryLabel: optional string
+   - userId: relation to users
+   - date: string
+   - createdAt: number
+
+2. users collection:
+   - mrr: optional number (monthly recurring revenue)
+   - All existing user fields maintained
+
+3. budgetAllocations collection:
+   - userId: relation to users
+   - planId: optional relation to budgetPlans
+   - category: enum (same as spend)
+   - customCategoryLabel: optional string
+   - amount: number
+   - description: optional string
+   - createdAt: number
+   - updatedAt: number
+
+✅ COMPLETED: Convex Functions Created:
+
+**convex/budgetAllocations.ts:**
+- getAllocationsForCurrentUser (query): Protected, returns user's allocations
+- createAllocation (mutation): Protected, creates new allocation
+- updateAllocation (mutation): Protected, updates existing allocation
+- deleteAllocation (mutation): Protected, deletes allocation
+
+**convex/users.ts:**
+- getCurrentUser (query): Protected, returns user data including mrr
+- updateMrr (mutation): Protected, updates user's monthly recurring revenue
+
+All functions use Clerk authentication via ctx.auth.getUserIdentity()
+
+Also make sure to user a bento layout in each page and make sure to make the cards clean and make them use the liquid glass background that the dock is using. And also make sure that the font is big enough to display things that are important very well and normal for normal things and small for things that are not important.
+The bento grid should be smouth and compact with no empty spaces in its middle and also make sure that things that are nost important are at the top and things that are less important are at the bottom, and also make sure that each tab fits in the 100vh of the screen, with overlapping the dock.
+
+I hope this will be enough for you to make things correctly.
+Good luck.

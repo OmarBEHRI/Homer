@@ -91,6 +91,7 @@ export default defineSchema({
       }),
     ),
     mrr: v.optional(v.number()),
+    payDay: v.optional(v.number()),
   })
     .index("by_externalId", ["externalId"])
     .index("by_email", ["email"])
