@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -68,12 +68,6 @@ const predefinedCategories = [
   "Miscellaneous",
 ];
 
-const makeLocalId = (prefix: string) => {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
 
 const currencyFormatter = (currency: string) =>
   new Intl.NumberFormat("en-US", {
@@ -89,7 +83,15 @@ export default function BudgetPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newExpense, setNewExpense] = useState({ amount: "", category: "", description: "", newCategory: "" });
   const [selectedPeriod, setSelectedPeriod] = useState<string>("30");
-  const [budgetCurrency, setBudgetCurrency] = useState<string>("USD");
+  const [budgetCurrency] = useState<string>("USD");
+
+  // Prevent scrolling on budget page
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   // Convex queries and mutations (will return null/undefined if not authenticated)
   const convexAllocations = useQuery(api.budgetAllocations.getAllocationsForCurrentUser);
@@ -105,13 +107,19 @@ export default function BudgetPage() {
 
   // Transform Convex data to component format
   const allocations: Allocation[] = useMemo(() => {
-    if (!convexAllocations) return [];
-    return convexAllocations.map((allocation) => ({
+    console.log("🔍 [BudgetPage] Raw Convex allocations:", convexAllocations);
+    if (!convexAllocations) {
+      console.log("🔍 [BudgetPage] No convexAllocations, returning empty array");
+      return [];
+    }
+    const transformed = convexAllocations.map((allocation) => ({
       id: allocation._id,
       category: allocation.customCategoryLabel || allocation.category,
       amount: allocation.amount,
       description: allocation.description,
     }));
+    console.log("🔍 [BudgetPage] Transformed allocations:", transformed);
+    return transformed;
   }, [convexAllocations]);
 
   // Transform expenses from Convex
@@ -231,10 +239,6 @@ export default function BudgetPage() {
     return data;
   }, [expenses, selectedPeriod, nowTimestamp]);
 
-  const totalAllocated = useMemo(
-    () => allocations.reduce((sum, allocation) => sum + allocation.amount, 0),
-    [allocations],
-  );
 
   const resetExpenseForm = () => setNewExpense({ amount: "", category: "", description: "", newCategory: "" });
 
@@ -251,7 +255,7 @@ export default function BudgetPage() {
     const categoryLabel = newExpense.newCategory.trim() || newExpense.category;
     
     // Determine the category enum value
-    let categoryEnum: any = categoryLabel;
+    let categoryEnum: string = categoryLabel;
     if (newExpense.newCategory.trim()) {
       categoryEnum = "Custom";
     }
@@ -306,7 +310,7 @@ export default function BudgetPage() {
   }) => {
     try {
       await createAllocation({
-        category: allocation.category as any, // Type assertion for the enum
+        category: allocation.category as "Rent" | "Internet" | "Mobile Internet" | "Groceries" | "Eating Out" | "Shopping" | "Car Mortgage" | "House Mortgage" | "Other Mortgages or Debts" | "Transportation" | "Subscriptions" | "Utilities" | "Healthcare" | "Savings" | "Investments" | "Entertainment" | "Insurance" | "Education" | "Miscellaneous" | "Custom",
         amount: allocation.amount,
         description: allocation.description,
         customCategoryLabel: allocation.customCategoryLabel,
@@ -376,13 +380,13 @@ export default function BudgetPage() {
   `;
 
   return (
-    <div className="relative min-h-screen px-4 pb-[120px] pt-6">
+    <div className="relative h-screen px-4 pb-[160px] pt-6 overflow-hidden">
       <style>{glassStyles}</style>
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 bg-transparent">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 bg-transparent h-full overflow-hidden">
         <BudgetTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="h-[calc(100vh-190px)] overflow-hidden bg-transparent">
+        <div className="flex-1 overflow-hidden bg-transparent">
           {activeTab === "analytics" && (
             <AnalyticsTab
               chartData={chartData}
@@ -414,14 +418,14 @@ export default function BudgetPage() {
               handleAllocationSubmit={handleAllocationSubmit}
               handleUpdateAllocation={async (params) => {
                 await updateAllocation({
-                  allocationId: params.allocationId as any,
+                  allocationId: params.allocationId as string,
                   amount: params.amount,
                   description: params.description,
                 });
               }}
               handleDeleteAllocation={async (params) => {
                 await deleteAllocation({
-                  allocationId: params.allocationId as any,
+                  allocationId: params.allocationId as string,
                 });
               }}
               currencyFormatter={currencyFormatter}

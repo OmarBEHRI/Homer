@@ -59,7 +59,7 @@ export default function AnalyticsTab({
   categorySpending: CategorySpending[];
 }) {
   return (
-    <div className="grid h-[90%] grid-cols-12 gap-3 overflow-hidden bg-transparent">
+    <div className="grid h-full grid-cols-12 gap-3 overflow-hidden bg-transparent">
       <div className="col-span-12 xl:col-span-8 h-full">
         <SpendingEvolutionChart
           chartData={chartData}

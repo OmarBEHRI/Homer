@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useMemo, useCallback, memo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Treemap, ResponsiveContainer } from "recharts";
 import { Plus, DollarSign, Trash2 } from "lucide-react";
+import CustomTreemap from "@/components/budget/CustomTreemap";
 
 interface Allocation {
   id: string;
@@ -40,176 +40,6 @@ const allCategories = [
   "Custom",
 ];
 
-// Move CustomTreemapContent outside and memoize it
-const CustomTreemapContent = memo(({
-  x,
-  y,
-  width,
-  height,
-  name,
-  size,
-  isUnallocated,
-  allocation,
-  currencyFormatter,
-  budgetCurrency,
-  onAllocationClick,
-  onDeleteClick,
-}: any) => {
-  const getColor = useCallback((name: string, isUnallocated: boolean) => {
-    if (isUnallocated) {
-      return "#9ca3af"; // Gray for unallocated
-    }
-
-    const colors = [
-      "#4f46e5", // Indigo
-      "#7c3aed", // Violet
-      "#2563eb", // Blue
-      "#0891b2", // Cyan
-      "#059669", // Emerald
-      "#65a30d", // Lime
-      "#ca8a04", // Yellow
-      "#ea580c", // Orange
-      "#dc2626", // Red
-      "#db2777", // Pink
-    ];
-    const index = name.split("").reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0) % colors.length;
-    return colors[index];
-  }, []);
-
-  const color = getColor(name, isUnallocated);
-  const showText = width > 60 && height > 40;
-  const showButtons = width > 100 && height > 60 && !isUnallocated;
-
-  return (
-    <g>
-      <rect
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        rx={12}
-        ry={12}
-        style={{
-          fill: color,
-          stroke: "#fff",
-          strokeWidth: 3,
-          opacity: 1,
-          cursor: isUnallocated ? "default" : "pointer",
-          transition: "all 0.2s ease",
-        }}
-        onClick={() => {
-          if (!isUnallocated && allocation) {
-            onAllocationClick(allocation);
-          }
-        }}
-        onMouseEnter={(e) => {
-          if (!isUnallocated) {
-            e.currentTarget.style.transform = "scale(1.02)";
-            e.currentTarget.style.filter = "brightness(1.1)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isUnallocated) {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.filter = "brightness(1)";
-          }
-        }}
-      />
-      {showText && (
-        <>
-          <text
-            x={x + width / 2}
-            y={y + height / 2 - (showButtons ? 16 : 8)}
-            textAnchor="middle"
-            fill="#fff"
-            fontSize={width > 100 ? 14 : 12}
-            fontWeight="600"
-            style={{ pointerEvents: "none" }}
-          >
-            {name}
-          </text>
-          <text
-            x={x + width / 2}
-            y={y + height / 2 + (showButtons ? 0 : 10)}
-            textAnchor="middle"
-            fill="#fff"
-            fontSize={width > 100 ? 12 : 10}
-            opacity={0.95}
-            style={{ pointerEvents: "none" }}
-          >
-            {size != null && !isNaN(size) ? currencyFormatter(budgetCurrency).format(size) : ""}
-          </text>
-          {showButtons && (
-            <g>
-              <rect
-                x={x + width / 2 - 42}
-                y={y + height / 2 + 16}
-                width={36}
-                height={28}
-                rx={6}
-                ry={6}
-                fill="rgba(255, 255, 255, 0.2)"
-                stroke="#fff"
-                strokeWidth={1.5}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (allocation) {
-                    onAllocationClick(allocation);
-                  }
-                }}
-              />
-              <text
-                x={x + width / 2 - 24}
-                y={y + height / 2 + 34}
-                textAnchor="middle"
-                fill="#fff"
-                fontSize={11}
-                fontWeight="600"
-                style={{ pointerEvents: "none" }}
-              >
-                ✏️
-              </text>
-
-              <rect
-                x={x + width / 2 + 6}
-                y={y + height / 2 + 16}
-                width={36}
-                height={28}
-                rx={6}
-                ry={6}
-                fill="rgba(255, 255, 255, 0.2)"
-                stroke="#fff"
-                strokeWidth={1.5}
-                style={{ cursor: "pointer" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (allocation) {
-                    onDeleteClick(allocation);
-                  }
-                }}
-              />
-              <text
-                x={x + width / 2 + 24}
-                y={y + height / 2 + 34}
-                textAnchor="middle"
-                fill="#fff"
-                fontSize={11}
-                fontWeight="600"
-                style={{ pointerEvents: "none" }}
-              >
-                🗑️
-              </text>
-            </g>
-          )}
-        </>
-      )}
-    </g>
-  );
-});
-
-CustomTreemapContent.displayName = "CustomTreemapContent";
-
 export default function ManagementTab({
   allocations,
   budgetCurrency,
@@ -223,8 +53,8 @@ export default function ManagementTab({
   allocations: Allocation[];
   budgetCurrency: string;
   handleAllocationSubmit: (allocation: { category: string; amount: number; description?: string; customCategoryLabel?: string }) => void;
-  handleUpdateAllocation: (params: { allocationId: string; amount?: number; description?: string }) => Promise<any>;
-  handleDeleteAllocation: (params: { allocationId: string }) => Promise<any>;
+  handleUpdateAllocation: (params: { allocationId: string; amount?: number; description?: string }) => Promise<void>;
+  handleDeleteAllocation: (params: { allocationId: string }) => Promise<void>;
   currencyFormatter: (currency: string) => Intl.NumberFormat;
   monthlySalary: number | null | undefined;
   onUpdateMonthlySalary: (amount: number) => void;
@@ -346,7 +176,7 @@ export default function ManagementTab({
       size: number;
       description?: string;
       isUnallocated: boolean;
-      allocation?: Allocation;
+      allocation?: Allocation | null;
     }> = allocations.map((allocation) => ({
       name: allocation.category,
       size: allocation.amount,
@@ -361,6 +191,7 @@ export default function ManagementTab({
         size: unallocatedAmount,
         description: "Remaining salary not yet allocated to any category",
         isUnallocated: true,
+        allocation: null,
       });
     }
 
@@ -376,11 +207,9 @@ export default function ManagementTab({
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <CardTitle className="glass-text text-lg">Distribution Tree</CardTitle>
-              <p className="glass-text text-xs text-gray-500 mt-1">
-                {monthlySalary && monthlySalary > 0
-                  ? `Monthly Salary: ${currencyFormatter(budgetCurrency).format(monthlySalary)} • Allocated: ${currencyFormatter(budgetCurrency).format(totalAllocated)} • Unallocated: ${currencyFormatter(budgetCurrency).format(unallocatedAmount)}`
-                  : "Set your monthly salary to start allocating your budget."}
-              </p>
+                <p className="glass-text text-sm text-gray-600 mt-1">
+                  Manage your monthly salary by creating allocations. Click the &quot;+&quot; icon to create new allocations and the &quot;$&quot; icon to modify your monthly salary. Click on any allocation to edit it.
+                </p>
             </div>
             <div className="flex gap-2">
               <Dialog open={isSalaryModalOpen} onOpenChange={setIsSalaryModalOpen}>
@@ -531,7 +360,7 @@ export default function ManagementTab({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-6">
+        <CardContent className="flex-1 overflow-hidden p-4">
           {showSalaryPrompt ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center space-y-3">
@@ -539,7 +368,7 @@ export default function ManagementTab({
                   <DollarSign className="w-8 h-8 text-white" />
                 </div>
                 <p className="glass-text text-sm font-semibold text-gray-700 max-w-xs mx-auto">
-                  Welcome! Let's set up your budget.
+                  Welcome! Let&apos;s set up your budget.
                 </p>
                 <p className="glass-text text-xs text-gray-500 max-w-xs mx-auto">
                   Click the $ button above to set your monthly salary and start allocating your budget.
@@ -558,23 +387,12 @@ export default function ManagementTab({
               </div>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <Treemap
-                data={transformedData}
-                dataKey="size"
-                stroke="transparent"
-                fill="transparent"
-                isAnimationActive={false}
-                content={
-                  <CustomTreemapContent
-                    currencyFormatter={currencyFormatter}
-                    budgetCurrency={budgetCurrency}
-                    onAllocationClick={handleAllocationClick}
-                    onDeleteClick={handleDeleteClick}
-                  />
-                }
-              />
-            </ResponsiveContainer>
+            <CustomTreemap
+              data={transformedData}
+              currencyFormatter={currencyFormatter}
+              budgetCurrency={budgetCurrency}
+              onAllocationClick={handleAllocationClick}
+            />
           )}
         </CardContent>
       </Card>

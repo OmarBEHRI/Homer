@@ -200,3 +200,4 @@ Potential improvements:
 5. Add recurring expense templates
 6. Add budget vs actual comparison
 7. Add expense categories analytics
+

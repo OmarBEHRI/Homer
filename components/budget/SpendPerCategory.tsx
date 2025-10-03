@@ -19,17 +19,19 @@ export default function SpendPerCategory({ categorySpending }: SpendPerCategoryP
           <CardTitle className="glass-text text-lg font-semibold">Spend Per Category (This Month)</CardTitle>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 overflow-y-auto space-y-2 pb-3">
-        {categorySpending.length > 0 ? (
-          categorySpending.map((item, index) => (
-            <div key={index} className="flex justify-between items-center py-1">
-              <span className="glass-text text-sm font-medium">{item.category}</span>
-              <span className="glass-text text-sm font-bold">${item.amount.toFixed(2)}</span>
-            </div>
-          ))
-        ) : (
-          <p className="glass-text text-sm text-gray-500">No spending data available</p>
-        )}
+      <CardContent className="flex-1 overflow-hidden pb-3">
+        <div className="h-full overflow-y-auto space-y-2">
+          {categorySpending.length > 0 ? (
+            categorySpending.map((item, index) => (
+              <div key={index} className="flex justify-between items-center py-1">
+                <span className="glass-text text-sm font-medium">{item.category}</span>
+                <span className="glass-text text-sm font-bold">${item.amount.toFixed(2)}</span>
+              </div>
+            ))
+          ) : (
+            <p className="glass-text text-sm text-gray-500">No spending data available</p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
