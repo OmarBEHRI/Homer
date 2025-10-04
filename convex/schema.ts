@@ -168,5 +168,45 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_friend", ["friendId"])
     .index("by_user_friend", ["userId", "friendId"]),
+
+  // Task management tables
+  tables: defineTable({
+    userId: v.id("users"),
+    name: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_createdAt", ["userId", "createdAt"]),
+
+  lists: defineTable({
+    tableId: v.id("tables"),
+    name: v.string(),
+    order: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_table", ["tableId"])
+    .index("by_table_order", ["tableId", "order"]),
+
+  tasks: defineTable({
+    listId: v.id("lists"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    deadline: v.optional(v.number()), // Unix timestamp
+    priority: v.union(
+      v.literal("low"),
+      v.literal("medium"),
+      v.literal("high")
+    ),
+    color: v.optional(v.string()), // Hex color code
+    isCompleted: v.boolean(),
+    order: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_list", ["listId"])
+    .index("by_list_order", ["listId", "order"])
+    .index("by_list_completed", ["listId", "isCompleted"]),
 });
 

@@ -176,7 +176,7 @@ export default function ManagementTab({
       size: number;
       description?: string;
       isUnallocated: boolean;
-      allocation?: Allocation | null;
+      allocation?: Allocation;
     }> = allocations.map((allocation) => ({
       name: allocation.category,
       size: allocation.amount,
@@ -191,7 +191,7 @@ export default function ManagementTab({
         size: unallocatedAmount,
         description: "Remaining salary not yet allocated to any category",
         isUnallocated: true,
-        allocation: null,
+        allocation: undefined,
       });
     }
 

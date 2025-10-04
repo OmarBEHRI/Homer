@@ -10,7 +10,12 @@ interface AllocationData {
   size: number;
   description?: string;
   isUnallocated: boolean;
-  allocation?: AllocationData;
+  allocation?: {
+    id: string;
+    category: string;
+    amount: number;
+    description?: string;
+  };
 }
 
 // Internal node structure with position/size from D3

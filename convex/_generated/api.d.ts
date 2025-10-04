@@ -17,6 +17,7 @@ import type * as budgetAllocations from "../budgetAllocations.js";
 import type * as chatMutations from "../chatMutations.js";
 import type * as chatQueries from "../chatQueries.js";
 import type * as expenses from "../expenses.js";
+import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
 
 /**
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   chatMutations: typeof chatMutations;
   chatQueries: typeof chatQueries;
   expenses: typeof expenses;
+  tasks: typeof tasks;
   users: typeof users;
 }>;
 export declare const api: FilterApi<
