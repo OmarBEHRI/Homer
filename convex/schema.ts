@@ -92,11 +92,13 @@ export default defineSchema({
     ),
     mrr: v.optional(v.number()),
     payDay: v.optional(v.number()),
+    chatId: v.optional(v.string()), // Unique identifier for chat functionality
   })
     .index("by_externalId", ["externalId"])
     .index("by_email", ["email"])
     .index("by_username", ["username"])
-    .index("by_phoneNumber", ["phoneNumber"]),
+    .index("by_phoneNumber", ["phoneNumber"])
+    .index("by_chatId", ["chatId"]),
   spend: defineTable({
     userId: v.id("users"),
     amount: v.number(),
@@ -131,5 +133,40 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_plan", ["planId"]),
+  
+  // Chat-related tables
+  chats: defineTable({
+    participants: v.array(v.id("users")),
+    lastMessageAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_participants", ["participants"])
+    .index("by_lastMessageAt", ["lastMessageAt"]),
+  
+  messages: defineTable({
+    chatId: v.id("chats"),
+    senderId: v.id("users"),
+    content: v.string(),
+    seen: v.boolean(),
+    seenAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_chat", ["chatId"])
+    .index("by_chat_createdAt", ["chatId", "createdAt"])
+    .index("by_sender", ["senderId"]),
+  
+  friendships: defineTable({
+    userId: v.id("users"),
+    friendId: v.id("users"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("accepted"),
+      v.literal("blocked")
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_friend", ["friendId"])
+    .index("by_user_friend", ["userId", "friendId"]),
 });
 
