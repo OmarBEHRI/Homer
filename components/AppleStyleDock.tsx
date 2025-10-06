@@ -12,6 +12,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 import { Dock, DockIcon, DockItem, DockLabel } from "@/components/core/dock";
+import { Logo } from "@/components/logo";
 
 const data = [
   {
@@ -57,7 +58,13 @@ export function AppleStyleDock() {
 
   return (
     <div className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
-      <Dock className="pointer-events-auto items-end pb-3">
+      <Dock className="pointer-events-auto items-center pb-3 px-4">
+        {/* Homer Logo and Name - Not a button */}
+        <Link href="/" className="flex items-center h-12">
+          <Logo className="h-6 w-auto" uniColor={true} />
+        </Link>
+        
+        {/* Navigation Items */}
         {data.map((item, idx) => (
           <Link key={idx} href={item.href} className="group">
             <DockItem className="aspect-square rounded-2xl border border-white/50 bg-white/25 backdrop-blur-2xl shadow-[0_8px_32px_rgba(31,38,135,0.37)] transition-transform duration-300 ease-out hover:scale-[1.12] relative">

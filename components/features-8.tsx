@@ -22,7 +22,7 @@ export default function FeaturesSection() {
                                     </svg>
                                     <span className="mx-auto block w-fit text-5xl font-semibold">100%</span>
                                 </div>
-                                <h2 className="mt-6 text-center text-3xl font-semibold">Customizable</h2>
+                                <h2 className="mt-6 text-center text-3xl font-semibold">All-in-One</h2>
                             </CardContent>
                         </Card>
                         <Card className="relative col-span-full overflow-hidden bg-white/60 sm:col-span-3 lg:col-span-2">
@@ -41,8 +41,8 @@ export default function FeaturesSection() {
                                     </svg>
                                 </div>
                                 <div className="relative z-10 mt-6 space-y-2 text-center">
-                                    <h2 className="text-lg font-medium transition">Secure by default</h2>
-                                    <p className="text-foreground">Provident fugit and vero voluptate. magnam magni doloribus dolores voluptates a sapiente nisi.</p>
+                                    <h2 className="text-lg font-medium transition">Budget Management</h2>
+                                    <p className="text-foreground">Track expenses, manage savings, and monitor investments with our intuitive budget manager. Stay on top of your finances effortlessly.</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -133,8 +133,8 @@ export default function FeaturesSection() {
                                     </svg>
                                 </div>
                                 <div className="relative z-10 mt-14 space-y-2 text-center">
-                                    <h2 className="text-lg font-medium transition">Faster than light</h2>
-                                    <p className="text-foreground">Provident fugit vero voluptate. magnam magni doloribus dolores voluptates inventore nisi.</p>
+                                    <h2 className="text-lg font-medium transition">Task Management</h2>
+                                    <p className="text-foreground">Organize your projects and tasks with our simple, user-friendly interface. Get things done fast without confusion or over-planning.</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -148,8 +148,8 @@ export default function FeaturesSection() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="group-hover:text-secondary-950 text-lg font-medium text-zinc-800 transition dark:text-white">Faster than light</h2>
-                                        <p className="text-foreground">Provident fugit vero voluptate. Voluptates a sapiente inventore nisi.</p>
+                                        <h2 className="group-hover:text-secondary-950 text-lg font-medium text-zinc-800 transition dark:text-white">Smart Dashboard</h2>
+                                        <p className="text-foreground">Customize your dashboard with widgets for messages, resources, spending trends, and daily tasks. Stay organized and motivated.</p>
                                     </div>
                                 </div>
                                 <div className="rounded-tl-(--radius) relative -mb-6 -mr-6 mt-6 h-fit border-l border-t p-6 py-6 sm:ml-6">
@@ -209,8 +209,8 @@ export default function FeaturesSection() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <h2 className="text-lg font-medium transition">Keep your loved ones safe</h2>
-                                        <p className="text-foreground">Voluptate. magnam magni doloribus dolores voluptates a sapiente inventore nisi.</p>
+                                        <h2 className="text-lg font-medium transition">Connect & Share</h2>
+                                        <p className="text-foreground">Chat with friends and share valuable resources. Store and categorize web resources for Wealth, Knowledge, and Recreation.</p>
                                     </div>
                                 </div>
                                 <div className="before:bg-(--color-border) relative mt-6 before:absolute before:inset-0 before:mx-auto before:w-px sm:-my-6 sm:-mr-6">
