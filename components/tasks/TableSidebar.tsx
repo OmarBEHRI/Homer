@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Card } from "../ui/card";
 import { ConfirmDialog } from "./modals/ConfirmDialog";
-import { Plus, Search, MoreHorizontal, Edit2, Trash2 } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Edit2, Trash2, Archive, Settings } from "lucide-react";
 
 interface TableSidebarProps {
   tables: Array<{
@@ -19,13 +19,15 @@ interface TableSidebarProps {
   selectedTableId?: Id<"tables">;
   onSelectTable: (tableId: Id<"tables">) => void;
   onCreateTable: () => void;
+  onOpenArchivedTables: () => void;
 }
 
 export function TableSidebar({ 
   tables, 
   selectedTableId, 
   onSelectTable, 
-  onCreateTable 
+  onCreateTable,
+  onOpenArchivedTables
 }: TableSidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingTableId, setEditingTableId] = useState<Id<"tables"> | null>(null);
@@ -35,6 +37,7 @@ export function TableSidebar({
   
   const updateTable = useMutation(api.tasks.updateTable);
   const deleteTable = useMutation(api.tasks.deleteTable);
+  const archiveTable = useMutation(api.tasks.archiveTable);
 
   const filteredTables = tables.filter(table =>
     table.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -72,11 +75,26 @@ export function TableSidebar({
     setShowActions(null);
   };
 
+  const handleArchiveTable = async (tableId: Id<"tables">) => {
+    await archiveTable({ tableId });
+    setShowActions(null);
+  };
+
   return (
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Tables</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Tables</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onOpenArchivedTables}
+            className="p-2 h-8 w-8"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
         
         {/* Search */}
         <div className="relative mb-4">
@@ -112,7 +130,7 @@ export function TableSidebar({
               <div key={table._id} className="relative">
                 <Card
                   className={`
-                    p-3 cursor-pointer transition-colors
+                    p-3 cursor-pointer transition-colors group
                     ${selectedTableId === table._id 
                       ? "bg-blue-50 border-blue-200" 
                       : "hover:bg-gray-50"
@@ -166,6 +184,16 @@ export function TableSidebar({
                     >
                       <Edit2 className="w-3 h-3" />
                       Rename
+                    </button>
+                    <button
+                      className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleArchiveTable(table._id);
+                      }}
+                    >
+                      <Archive className="w-3 h-3" />
+                      Archive
                     </button>
                     <button
                       className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 text-red-600 flex items-center gap-2"

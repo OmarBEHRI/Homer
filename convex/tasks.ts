@@ -29,9 +29,28 @@ export const getUserTables = query({
   handler: async (ctx) => {
     const userId = await getUserId(ctx);
 
+    const tables = await ctx.db
+      .query("tables")
+      .withIndex("by_user_archived", (q) => q.eq("userId", userId).eq("isArchived", undefined))
+      .collect();
+
+    // Sort by lastSeenAt (most recent first), fallback to updatedAt, then createdAt
+    return tables.sort((a, b) => {
+      const aTime = a.lastSeenAt || a.updatedAt || a.createdAt;
+      const bTime = b.lastSeenAt || b.updatedAt || b.createdAt;
+      return bTime - aTime;
+    });
+  },
+});
+
+export const getArchivedTables = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await getUserId(ctx);
+
     return await ctx.db
       .query("tables")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user_archived", (q) => q.eq("userId", userId).eq("isArchived", true))
       .order("desc")
       .collect();
   },
@@ -128,6 +147,7 @@ export const createTable = mutation({
       name,
       createdAt: now,
       updatedAt: now,
+      lastSeenAt: now,
     });
 
     // Create default lists
@@ -162,6 +182,58 @@ export const updateTable = mutation({
     await ctx.db.patch(tableId, {
       name,
       updatedAt: Date.now(),
+      lastSeenAt: Date.now(),
+    });
+  },
+});
+
+export const archiveTable = mutation({
+  args: { tableId: v.id("tables") },
+  handler: async (ctx, { tableId }) => {
+    const userId = await getUserId(ctx);
+
+    const table = await ctx.db.get(tableId);
+    if (!table || table.userId !== userId) {
+      throw new Error("Table not found or access denied");
+    }
+
+    await ctx.db.patch(tableId, {
+      isArchived: true,
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const unarchiveTable = mutation({
+  args: { tableId: v.id("tables") },
+  handler: async (ctx, { tableId }) => {
+    const userId = await getUserId(ctx);
+
+    const table = await ctx.db.get(tableId);
+    if (!table || table.userId !== userId) {
+      throw new Error("Table not found or access denied");
+    }
+
+    await ctx.db.patch(tableId, {
+      isArchived: undefined,
+      lastSeenAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  },
+});
+
+export const updateTableLastSeen = mutation({
+  args: { tableId: v.id("tables") },
+  handler: async (ctx, { tableId }) => {
+    const userId = await getUserId(ctx);
+
+    const table = await ctx.db.get(tableId);
+    if (!table || table.userId !== userId) {
+      throw new Error("Table not found or access denied");
+    }
+
+    await ctx.db.patch(tableId, {
+      lastSeenAt: Date.now(),
     });
   },
 });
@@ -258,6 +330,11 @@ export const updateList = mutation({
     await ctx.db.patch(listId, {
       name,
       updatedAt: Date.now(),
+    });
+
+    // Update table's lastSeenAt when list is modified
+    await ctx.db.patch(list.tableId, {
+      lastSeenAt: Date.now(),
     });
   },
 });
@@ -384,6 +461,11 @@ export const updateTask = mutation({
     if (color !== undefined) updates.color = color;
 
     await ctx.db.patch(taskId, updates);
+
+    // Update table's lastSeenAt when task is modified
+    await ctx.db.patch(table._id, {
+      lastSeenAt: Date.now(),
+    });
   },
 });
 
@@ -536,6 +618,11 @@ export const toggleTaskCompletion = mutation({
     await ctx.db.patch(taskId, {
       isCompleted: !task.isCompleted,
       updatedAt: Date.now(),
+    });
+
+    // Update table's lastSeenAt when task completion is toggled
+    await ctx.db.patch(table._id, {
+      lastSeenAt: Date.now(),
     });
   },
 });

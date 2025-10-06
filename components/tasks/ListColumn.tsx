@@ -68,6 +68,15 @@ export function ListColumn({
     },
   });
 
+  // Make the add task button area droppable too
+  const { setNodeRef: setAddTaskNodeRef, isOver: isOverAddTask } = useDroppable({
+    id: `add-task-${list._id}`,
+    data: {
+      type: 'list',
+      list,
+    },
+  });
+
   const handleSaveEdit = async () => {
     if (editName.trim() && editName !== list.name) {
       await updateList({ listId: list._id, name: editName.trim() });
@@ -121,34 +130,36 @@ export function ListColumn({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Pie Chart for completion ratio */}
-          <div className="flex items-center gap-1">
-            <div className="relative w-6 h-6">
-              <svg className="w-6 h-6 transform -rotate-90" viewBox="0 0 24 24">
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  fill="none"
-                  stroke="#e5e7eb"
-                  strokeWidth="2"
-                />
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2"
-                  strokeDasharray={`${(completedTasks / totalTasks) * 62.83} 62.83`}
-                  className="transition-all duration-300"
-                />
-              </svg>
+          {/* Pie Chart for completion ratio - only show if there are tasks */}
+          {totalTasks > 0 && (
+            <div className="flex items-center gap-1">
+              <div className="relative w-6 h-6">
+                <svg className="w-6 h-6 transform -rotate-90" viewBox="0 0 24 24">
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="2"
+                  />
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2"
+                    strokeDasharray={`${(completedTasks / totalTasks) * 62.83} 62.83`}
+                    className="transition-all duration-300"
+                  />
+                </svg>
+              </div>
+              <span className="text-xs text-gray-500 font-medium">
+                {completedTasks}/{totalTasks}
+              </span>
             </div>
-            <span className="text-xs text-gray-500 font-medium">
-              {completedTasks}/{totalTasks}
-            </span>
-          </div>
+          )}
 
           <div className="relative">
             <Button
@@ -227,20 +238,26 @@ export function ListColumn({
           <DropIndicator isVisible={true} position="bottom" />
         )}
         
-        {/* Drop indicator for empty list */}
-        {overListId === list._id && !overTaskId && tasks.length === 0 && (
+        {/* Drop indicator for empty list or when hovering over add task area */}
+        {overListId === list._id && !overTaskId && (
           <DropIndicator isVisible={true} position="bottom" />
         )}
         
         {/* Add Task Button - positioned after tasks */}
-        <Button
-          variant="ghost"
-          className="w-full h-10 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-gray-600 hover:text-gray-700"
-          onClick={() => onCreateTask(list._id)}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Add a task
-        </Button>
+        <div ref={setAddTaskNodeRef}>
+          <Button
+            variant="ghost"
+            className={`w-full h-10 border-2 border-dashed text-gray-600 hover:text-gray-700 ${
+              isOverAddTask 
+                ? 'border-blue-400 bg-blue-50' 
+                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+            }`}
+            onClick={() => onCreateTask(list._id)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add a task
+          </Button>
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}

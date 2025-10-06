@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { PrioritySelector } from "../forms/PrioritySelector";
 import { ColorSelector } from "../forms/ColorSelector";
 import { DeadlinePicker } from "../forms/DeadlinePicker";
-import { Check, Clock, AlertCircle, Circle, Edit2, Save, X } from "lucide-react";
+import { Check, Clock, AlertCircle, Circle, Edit2, Save, X, ChevronDown, ChevronUp } from "lucide-react";
 
 interface InspectTaskModalProps {
   isOpen: boolean;
@@ -68,6 +68,9 @@ export function InspectTaskModal({ isOpen, onClose, task }: InspectTaskModalProp
   const [isEditingDeadline, setIsEditingDeadline] = useState(false);
   const [isEditingColor, setIsEditingColor] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Description expansion state
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const updateTask = useMutation(api.tasks.updateTask);
   const toggleCompletion = useMutation(api.tasks.toggleTaskCompletion);
@@ -86,6 +89,7 @@ export function InspectTaskModal({ isOpen, onClose, task }: InspectTaskModalProp
       setIsEditingPriority(false);
       setIsEditingDeadline(false);
       setIsEditingColor(false);
+      setIsDescriptionExpanded(false);
     }
   }, [task, isOpen]);
 
@@ -144,12 +148,21 @@ export function InspectTaskModal({ isOpen, onClose, task }: InspectTaskModalProp
 
   const PriorityIcon = task ? priorityIcons[task.priority] : Circle;
   const deadlineStatus = task?.deadline ? getDeadlineStatus(task.deadline) : null;
+  
+  // Text cropping logic
+  const getCroppedText = (text: string, maxWords: number = 250) => {
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
+  
+  const shouldShowExpandButton = description && description.split(' ').length > 250;
 
   if (!task) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl lg:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span>Task Details</span>
@@ -252,9 +265,38 @@ export function InspectTaskModal({ isOpen, onClose, task }: InspectTaskModalProp
                 onClick={() => setIsEditingDescription(true)}
               >
                 <div className="flex items-start justify-between">
-                  <p className="text-gray-700 flex-1">
-                    {description || "Click to add description..."}
-                  </p>
+                  <div className="flex-1">
+                    <p className="text-gray-700">
+                      {description ? (
+                        isDescriptionExpanded ? description : getCroppedText(description)
+                      ) : (
+                        "Click to add description..."
+                      )}
+                    </p>
+                    {shouldShowExpandButton && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsDescriptionExpanded(!isDescriptionExpanded);
+                        }}
+                        className="mt-2 h-6 px-2 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        {isDescriptionExpanded ? (
+                          <>
+                            <ChevronUp className="w-3 h-3 mr-1" />
+                            Show Less
+                          </>
+                        ) : (
+                          <>
+                            <ChevronDown className="w-3 h-3 mr-1" />
+                            Expand
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                   <Edit2 className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" />
                 </div>
               </div>

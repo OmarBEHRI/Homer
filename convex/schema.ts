@@ -175,9 +175,13 @@ export default defineSchema({
     name: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),
+    lastSeenAt: v.optional(v.number()),
+    isArchived: v.optional(v.boolean()),
   })
     .index("by_user", ["userId"])
-    .index("by_user_createdAt", ["userId", "createdAt"]),
+    .index("by_user_createdAt", ["userId", "createdAt"])
+    .index("by_user_archived", ["userId", "isArchived"])
+    .index("by_user_lastSeen", ["userId", "lastSeenAt"]),
 
   lists: defineTable({
     tableId: v.id("tables"),

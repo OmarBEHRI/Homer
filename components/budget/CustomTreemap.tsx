@@ -272,17 +272,17 @@ const CustomTreemap = ({
 
     // Create D3 hierarchy
     const hierarchy = d3.hierarchy(root)
-      .sum((d: { value?: number }) => d.value || 0)
-      .sort((a: { value?: number }, b: { value?: number }) => (b.value || 0) - (a.value || 0));
+      .sum((d: any) => d.value || 0)
+      .sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
 
     // Create treemap layout
-    const treemapLayout = d3.treemap<{ name: string; children: Array<{ name: string; value: number; isUnallocated?: boolean; allocation?: AllocationData }> }>()
+    const treemapLayout = d3.treemap()
       .size([1000, 700])
       .padding(2)
       .round(true);
 
     // Generate treemap
-    treemapLayout(hierarchy);
+    treemapLayout(hierarchy as any);
 
     // Return leaves (actual data nodes)
     const leaves = hierarchy.leaves() as unknown as TreeNode[];

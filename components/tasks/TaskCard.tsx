@@ -73,7 +73,11 @@ export function TaskCard({ task, onEdit, onInspect }: TaskCardProps) {
   return (
     <Card
       ref={setNodeRef}
-      style={style}
+      style={{ 
+        ...style,
+        borderLeftColor: task.color, 
+        borderLeftWidth: task.color ? "4px" : "0" 
+      }}
       className={`
         p-3 cursor-pointer transition-all duration-200 hover:shadow-md
         ${task.isCompleted ? "opacity-60" : ""}
@@ -81,11 +85,6 @@ export function TaskCard({ task, onEdit, onInspect }: TaskCardProps) {
         ${deadlineStatus?.status === "due-soon" && !task.isCompleted ? "border-yellow-300 bg-yellow-50" : ""}
         ${isDragging ? "opacity-50 shadow-lg" : ""}
       `}
-      style={{ 
-        ...style,
-        borderLeftColor: task.color, 
-        borderLeftWidth: task.color ? "4px" : "0" 
-      }}
       onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

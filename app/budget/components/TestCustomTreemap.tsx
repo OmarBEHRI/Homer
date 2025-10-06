@@ -11,7 +11,7 @@ const TestCustomTreemap = () => {
     { name: "Entertainment", size: 200, isUnallocated: false, allocation: { id: "4", category: "Entertainment", amount: 200 } },
     { name: "Coffee", size: 50, isUnallocated: false, allocation: { id: "5", category: "Coffee", amount: 50 } },
     { name: "Snacks", size: 30, isUnallocated: false, allocation: { id: "6", category: "Snacks", amount: 30 } },
-    { name: "Unallocated", size: 1320, isUnallocated: true, allocation: null },
+    { name: "Unallocated", size: 1320, isUnallocated: true },
   ]);
 
   const currencyFormatter = (currency: string) => {
@@ -23,12 +23,7 @@ const TestCustomTreemap = () => {
 
   const handleAllocationClick = (allocation: any) => {
     console.log("Edit allocation:", allocation);
-    alert(`Editing allocation: ${allocation?.category || "Unallocated"}`);
-  };
-
-  const handleDeleteClick = (allocation: any) => {
-    console.log("Delete allocation:", allocation);
-    alert(`Deleting allocation: ${allocation?.category || "Unallocated"}`);
+    alert(`Editing allocation: ${allocation?.allocation?.category || "Unallocated"}`);
   };
 
   return (
@@ -41,7 +36,6 @@ const TestCustomTreemap = () => {
           currencyFormatter={currencyFormatter}
           budgetCurrency="USD"
           onAllocationClick={handleAllocationClick}
-          onDeleteClick={handleDeleteClick}
         />
       </div>
     </div>

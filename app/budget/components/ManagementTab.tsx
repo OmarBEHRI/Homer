@@ -147,7 +147,10 @@ export default function ManagementTab({
     }
   }, [selectedAllocation, handleDeleteAllocation]);
 
-  const handleAllocationClick = useCallback((allocation: Allocation) => {
+  const handleAllocationClick = useCallback((allocationData: { name: string; size: number; description?: string; isUnallocated: boolean; allocation?: Allocation }) => {
+    if (!allocationData.allocation) return; // Skip if no allocation data (e.g., unallocated items)
+    
+    const allocation = allocationData.allocation;
     setSelectedAllocation(allocation);
     setEditForm({
       amount: String(allocation.amount),

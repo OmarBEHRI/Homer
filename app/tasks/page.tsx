@@ -1,26 +1,33 @@
 "use client";
 
-import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
 import { TableSidebar } from "../../components/tasks/TableSidebar";
 import { MainWorkspace } from "../../components/tasks/MainWorkspace";
 import { MobileTableSelector } from "../../components/tasks/MobileTableSelector";
 import { CreateTableModal } from "../../components/tasks/modals/CreateTableModal";
+import { ArchivedTablesModal } from "../../components/tasks/modals/ArchivedTablesModal";
+import { Settings } from "lucide-react";
+import { Button } from "../../components/ui/button";
 
 export default function TasksPage() {
-  const [selectedTableId, setSelectedTableId] = useState<Id<"tables"> | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<Id<"tables"> | undefined>(undefined);
   const [isCreateTableModalOpen, setIsCreateTableModalOpen] = useState(false);
+  const [isArchivedTablesModalOpen, setIsArchivedTablesModalOpen] = useState(false);
 
   const tables = useQuery(api.tasks.getUserTables);
   const tableData = useQuery(
     api.tasks.getTableData,
     selectedTableId ? { tableId: selectedTableId } : "skip"
   );
+  const updateTableLastSeen = useMutation(api.tasks.updateTableLastSeen);
 
   const handleSelectTable = (tableId: Id<"tables">) => {
     setSelectedTableId(tableId);
+    // Update lastSeenAt when table is selected
+    updateTableLastSeen({ tableId });
   };
 
   const handleCreateTable = () => {
@@ -28,7 +35,10 @@ export default function TasksPage() {
   };
 
   const handleTableCreated = (tableId: string) => {
-    setSelectedTableId(tableId as Id<"tables">);
+    const id = tableId as Id<"tables">;
+    setSelectedTableId(id);
+    // Update lastSeenAt for newly created table
+    updateTableLastSeen({ tableId: id });
   };
 
   // Show loading state
@@ -52,6 +62,7 @@ export default function TasksPage() {
           selectedTableId={selectedTableId}
           onSelectTable={handleSelectTable}
           onCreateTable={handleCreateTable}
+          onOpenArchivedTables={() => setIsArchivedTablesModalOpen(true)}
         />
       </div>
 
@@ -95,6 +106,12 @@ export default function TasksPage() {
         isOpen={isCreateTableModalOpen}
         onClose={() => setIsCreateTableModalOpen(false)}
         onTableCreated={handleTableCreated}
+      />
+
+      {/* Archived Tables Modal */}
+      <ArchivedTablesModal
+        isOpen={isArchivedTablesModalOpen}
+        onClose={() => setIsArchivedTablesModalOpen(false)}
       />
     </div>
   );

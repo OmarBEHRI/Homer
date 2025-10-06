@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 import { addDays, endOfMonth, format, isAfter, parse, startOfMonth } from "date-fns";
 
@@ -255,9 +256,18 @@ export default function BudgetPage() {
     const categoryLabel = newExpense.newCategory.trim() || newExpense.category;
     
     // Determine the category enum value
-    let categoryEnum: string = categoryLabel;
+    let categoryEnum: "Rent" | "Internet" | "Mobile Internet" | "Groceries" | "Eating Out" | "Shopping" | "Car Mortgage" | "House Mortgage" | "Other Mortgages or Debts" | "Transportation" | "Subscriptions" | "Utilities" | "Healthcare" | "Savings" | "Investments" | "Entertainment" | "Insurance" | "Education" | "Miscellaneous" | "Custom";
+    
     if (newExpense.newCategory.trim()) {
       categoryEnum = "Custom";
+    } else {
+      // Validate that the selected category is one of the predefined ones
+      if (predefinedCategories.includes(newExpense.category)) {
+        categoryEnum = newExpense.category as typeof categoryEnum;
+      } else {
+        console.error("Invalid category selected:", newExpense.category);
+        return;
+      }
     }
 
     try {
@@ -418,14 +428,14 @@ export default function BudgetPage() {
               handleAllocationSubmit={handleAllocationSubmit}
               handleUpdateAllocation={async (params) => {
                 await updateAllocation({
-                  allocationId: params.allocationId as string,
+                  allocationId: params.allocationId as Id<"budgetAllocations">,
                   amount: params.amount,
                   description: params.description,
                 });
               }}
               handleDeleteAllocation={async (params) => {
                 await deleteAllocation({
-                  allocationId: params.allocationId as string,
+                  allocationId: params.allocationId as Id<"budgetAllocations">,
                 });
               }}
               currencyFormatter={currencyFormatter}
