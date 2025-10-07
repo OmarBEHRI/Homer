@@ -11,6 +11,7 @@ import { CreateTableModal } from "../../components/tasks/modals/CreateTableModal
 import { ArchivedTablesModal } from "../../components/tasks/modals/ArchivedTablesModal";
 import { Settings } from "lucide-react";
 import { Button } from "../../components/ui/button";
+import { PageHeader } from "../../components/PageHeader";
 
 export default function TasksPage() {
   const [selectedTableId, setSelectedTableId] = useState<Id<"tables"> | undefined>(undefined);
@@ -54,28 +55,31 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex pb-20">
-      {/* Sidebar */}
-      <div className="hidden md:block">
-        <TableSidebar
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-20">
+      <PageHeader title="Tasks" icon="Tasks" />
+      
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <div className="hidden md:block">
+          <TableSidebar
+            tables={tables}
+            selectedTableId={selectedTableId}
+            onSelectTable={handleSelectTable}
+            onCreateTable={handleCreateTable}
+            onOpenArchivedTables={() => setIsArchivedTablesModalOpen(true)}
+          />
+        </div>
+
+        {/* Mobile Table Selector */}
+        <MobileTableSelector
           tables={tables}
           selectedTableId={selectedTableId}
           onSelectTable={handleSelectTable}
           onCreateTable={handleCreateTable}
-          onOpenArchivedTables={() => setIsArchivedTablesModalOpen(true)}
         />
-      </div>
 
-      {/* Mobile Table Selector */}
-      <MobileTableSelector
-        tables={tables}
-        selectedTableId={selectedTableId}
-        onSelectTable={handleSelectTable}
-        onCreateTable={handleCreateTable}
-      />
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
         {selectedTableId && tableData ? (
           <MainWorkspace
             table={tableData.table}
@@ -99,6 +103,7 @@ export default function TasksPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Create Table Modal */}

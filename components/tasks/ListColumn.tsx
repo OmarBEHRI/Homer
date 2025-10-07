@@ -103,7 +103,7 @@ export function ListColumn({
   return (
     <div 
       ref={setNodeRef}
-      className={`flex flex-col w-72 md:w-80 bg-white rounded-lg border border-gray-200 shadow-sm flex-shrink-0 transition-colors ${
+      className={`flex flex-col w-72 md:w-80 bg-white rounded-lg border border-gray-200 shadow-sm flex-shrink-0 transition-colors h-fit max-h-full ${
         isOver ? 'border-blue-300 bg-blue-50' : ''
       }`}
     >
@@ -200,7 +200,7 @@ export function ListColumn({
       </div>
 
       {/* Tasks Container */}
-      <div className="flex-1 p-4 space-y-3 min-h-0">
+      <div className="flex-1 p-4 space-y-3 min-h-0 max-h-fit">
         <SortableContext 
           items={tasks.map(task => task._id)} 
           strategy={verticalListSortingStrategy}

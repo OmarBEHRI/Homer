@@ -159,7 +159,7 @@ export default function HeroSection() {
                                             <Button
                                                 asChild
                                                 size="lg"
-                                                className="rounded-xl bg-[#f0e3c8] px-5 text-base text-neutral-800 hover:bg-[#ead8b8]">
+                                                className="rounded-xl bg-zinc-900 px-5 text-base text-white hover:bg-zinc-800">
                                                 <Link href="/dashboard">
                                                     <span className="text-nowrap">Go to Dashboard</span>
                                                 </Link>
@@ -169,7 +169,7 @@ export default function HeroSection() {
                                             <Button
                                                 asChild
                                                 size="lg"
-                                                className="rounded-xl bg-[#f0e3c8] px-5 text-base text-neutral-800 hover:bg-[#ead8b8]">
+                                                className="rounded-xl bg-zinc-900 px-5 text-base text-white hover:bg-zinc-800">
                                                 <Link href="/sign-in">
                                                     <span className="text-nowrap">Get Started</span>
                                                 </Link>

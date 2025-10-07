@@ -13,6 +13,7 @@ import AnalyticsTab from "./components/AnalyticsTab";
 import ManagementTab from "./components/ManagementTab";
 import BudgetTabs from "./components/BudgetTabs";
 import InvestmentsTab from "./components/InvestmentsTab";
+import { PageHeader } from "@/components/PageHeader";
 
 interface Expense {
   id: string;
@@ -390,11 +391,13 @@ export default function BudgetPage() {
   `;
 
   return (
-    <div className="relative h-screen px-4 pb-[160px] pt-6 overflow-hidden">
+    <div className="relative h-screen overflow-hidden">
       <style>{glassStyles}</style>
-
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 bg-transparent h-full overflow-hidden">
-        <BudgetTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <PageHeader title="Budget" icon="Budget" />
+      
+      <div className="px-4 pb-[160px] pt-6 h-full overflow-hidden">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 bg-transparent h-full overflow-hidden">
+          <BudgetTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
         <div className="flex-1 overflow-hidden bg-transparent">
           {activeTab === "analytics" && (
@@ -444,6 +447,7 @@ export default function BudgetPage() {
             />
           )}
           {activeTab === "investments" && <InvestmentsTab />}
+          </div>
         </div>
       </div>
     </div>

@@ -1,3 +1,10 @@
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Resources",
+  description: "Store and share resources in categories: Wealth, Knowledge, Recreation.",
+};
+
 export default function ResourcesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
